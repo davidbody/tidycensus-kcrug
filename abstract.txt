@@ -1,0 +1,12 @@
+Obtaining, wrangling, and mapping U.S. Census data using tidycensus
+
+The U.S. Census Bureau's mission is to serve as the nation's leading
+provider of quality data about its people and economy. One way it does
+this is by making data available through a set of public API's. This
+talk will show how you can obtain census data through these API's,
+including the American Community Survey (ACS) and the 2020 Decennial
+Census, using the tidycensus package. We'll also see how tidycensus
+makes it easy to obtain spatial data that you can use to draw
+choropleth maps. At the end of this talk, you'll know how to download,
+summarize, and map U.S. Census data for your state, your home town, or
+any other region of interest.

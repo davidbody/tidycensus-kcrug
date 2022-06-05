@@ -1,0 +1,114 @@
+---
+title: "KCRUG: Obtaining, wrangling, and mapping U.S. Census data using tidycensus"
+author: "David W. Body"
+date: June 11, 2022
+format:
+  revealjs:
+    theme: [default, custom.scss]
+editor: visual
+---
+
+## Introduction
+
+Today we will cover
+
+-   How US Census data is organized
+-   Obtaining the data you want
+-   Wrangling the data
+-   Visualizing the data
+    -   Plots
+    -   Choropleth maps
+
+## tidycensus package
+
+We'll use the `tidycensus` package and several related packages. Install packages in R using `install.packages` as needed.
+
+```{r}
+#| eval: false
+#| echo: true
+install.packages("tidycensus")
+```
+
+Then load the package into your R environment using the `library` function.
+
+```{r}
+#| warning: false
+#| echo: true
+library(tidycensus)
+```
+
+## Census API key
+
+To use `tidycensus`, you will need a Census API key, which you can get for free from [http://api.census.gov/data/key_signup.html](http://api.census.gov/data/key_signup.html){.external target="_blank"}.
+
+Run the following once to install your key in your `.Renviron` file so it will automatically be available for future sessions.
+
+```{r}
+#| eval: false
+#| echo: true
+census_api_key("YOUR KEY GOES HERE", install = TRUE)
+```
+
+The `census_api_key` function is from the `tidycensus` package, so make sure it is loaded first.
+
+## How is US Census data organized?
+
+US Census data is organized into various datasets. Today we will use just two datasets, but many more are available.
+
+-   2020 Decennial Census
+-   2016-2020 American Community Survey
+
+## Decennial Census
+
+The 2020 Decennial Census is supposed to be an *enumeration* of the whole US population. It collects a limited number of variables on race, ethnicity, age, sex, and housing tenure.
+
+::: callout-note
+The limited data currently available was released under P.L. 94-171 for political redistricting purposes.
+:::
+
+## American Community Survey
+
+* ACS is sent to about 3.5 million households per year
+* Asks many more questions, including about income, education, language, and much more.
+* ACS data are *estimates*. The uncertainty in these estimates is expressed as *margins of error* for each variable.
+
+::: callout-note
+The ACS had a lower than usual response rate in 2020 due to the COVID-19 pandemic. As a result of the smaller sample size, the margins of error are larger for 2020 data.
+:::
+
+## Geographies and variables
+
+Census datasets are broken down into
+
+-   Geographies
+-   Variables
+
+## Census Geographies
+
+![US Census Geographies, Source: US Census](census-geographies.png)
+
+## Census variables
+
+* Different census datasets have different variables
+* 2020 Decennial Census currently has relatively view variables (~300)
+  - More variables will be released in the future
+* 2016-2020 ACS has around 28,000 variables
+
+## Demo
+
+* Census website and manual workflow
+* Tidycensus code examples
+
+## Resources
+
+Book
+
+[Analyzing US Census Data: Methods, Maps, and Models in R](https://walker-data.com/census-r/){.external target="_blank"} by Kyle Walker.
+
+Videos
+
+Recent workshops at the University of Michigan:
+
+-   [Analyzing 2020 Census data with R and tidycensus - YouTube](https://www.youtube.com/watch?v=u2m90iPOPto){.external target="_blank"}
+-   [Making Maps of 2020 US Census Data in R - YouTube](https://www.youtube.com/watch?v=KMOTZij9qhU){.external target="_blank"}
+-   [Using the New 2016-20 American Community Survey Estimates in R - YouTube](https://www.youtube.com/watch?v=hJ8OycTvQXM){.external target="_blank"}
