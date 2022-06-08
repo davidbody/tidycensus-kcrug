@@ -20,10 +20,10 @@ dc2020_vars |>
 
 # total population for Nebraska counties
 ne_pop_2020 <- get_decennial(
-  state = "Nebraska",
   geography = "county",
-  variables = "P1_001N",
+  variables = "P2_001N",
   year = 2020,
+  state = "Nebraska",
 )
 
 ne_pop_2020
@@ -54,13 +54,14 @@ ne_pop_2020 |>
 
 # Retrieving multiple variables -------------------------------------------
 
-variables <- c("P2_001N", "P2_005N", "P2_002N", "P2_006N", "P2_007N", "P2_008N", "P2_009N", "P2_010N", "P2_011N")
+variables <- c("P2_001N", "P2_005N", "P2_002N", "P2_006N", "P2_007N",
+               "P2_008N", "P2_009N", "P2_010N", "P2_011N")
 
 ne_race_ethnicity_2020 <- get_decennial(
-  state = "NE",
   geography = "county",
   variables = variables,
   year = 2020,
+  state = "NE", # <=
   # output = "wide"
 )
 
@@ -79,11 +80,11 @@ variables <- c(
   TwoOrMore = "P2_011N")
 
 ne_race_ethnicity_2020 <- get_decennial(
-  state = "NE",
   geography = "county",
   variables = variables,
-  summary_var = "P2_001N", # <=
   year = 2020,
+  summary_var = "P2_001N", # <=
+  state = "NE",
   # output = "wide"
 )
 
@@ -103,23 +104,23 @@ ne_hispanic_percent <- ne_race_ethnicity_2020 |>
 
 ne_hispanic_percent
 
-# Highest 5
-ne_hispanic_percent |>
-  slice_max(percent, n = 5)
-
 # Lowest 5
 ne_hispanic_percent |>
   slice_min(percent, n = 5)
+
+# Highest 5
+ne_hispanic_percent |>
+  slice_max(percent, n = 5)
 
 
 # Choropleth maps ---------------------------------------------------------
 
 ne_race_ethnicity_2020 <- get_decennial(
-  state = "NE",
   geography = "county",
   variables = variables,
-  summary_var = "P2_001N",
   year = 2020,
+  state = "NE",
+  summary_var = "P2_001N",
   geometry = TRUE # <=
 )
 
@@ -168,9 +169,9 @@ acs5_2020_vars
 
 ma_income_2020 <- get_acs(
   geography = "county",
-  state = "MA",
   variables = "B19013_001",
   year = 2020,
+  state = "MA",
   # moe_level = 99,
   # output = "wide"
 )
@@ -179,10 +180,10 @@ ma_income_2020 <- get_acs(
 ma_income_2020
 
 # ma_pop_2020 <- get_decennial(
-#   state = "MA",
 #   geography = "county",
 #   variables = "P1_001N",
 #   year = 2020,
+#   state = "MA",
 # )
 # ma_pop_2020
 
@@ -190,7 +191,7 @@ ma_income_2020
 ma_income_2020 |>
   mutate(NAME = str_remove(NAME, " County, Massachusetts")) |>
   ggplot(aes(estimate, reorder(NAME, estimate))) +
-  geom_point(color = "red") +
+  geom_point(color = "red", size = 2.5) +
   geom_errorbar(aes(xmin = estimate - moe, xmax = estimate + moe)) +
   scale_x_continuous(labels = scales::label_dollar()) +
   theme_light() +
