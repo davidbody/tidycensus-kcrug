@@ -5,10 +5,28 @@ date: June 11, 2022
 format:
   revealjs:
     theme: [default, custom.scss]
-editor: visual
+    code-line-numbers: false
+    link-external-icon: true
+    link-external-newwindow: true
+self-contained: true
+editor: source
 ---
 
 ## Introduction
+
+-   David W. Body ([\@david_body](https://twitter.com/david_body){.external target="_blank"} on Twitter)
+
+::: incremental
+-   Independent software developer and consultant ([Big Creek Software, LLC](https://www.bigcreek.com/){.external target="_blank"})
+
+-   Currently working primarily on a machine learning project with video data
+
+-   Casual user of Census data -- Not an expert!
+
+-   Agreed to give this talk to give myself an incentive to finish reading Kyle Walker's book.
+:::
+
+## Outline
 
 Today we will cover
 
@@ -19,41 +37,62 @@ Today we will cover
     -   Plots
     -   Choropleth maps
 
-## tidycensus package
+## Some relevant R packages
 
-We'll use the `tidycensus` package and several related packages. Install packages in R using `install.packages` as needed.
+-   [crsuggest](https://github.com/walkerke/crsuggest){.external target="_blank"}
 
-```{r}
-#| eval: false
-#| echo: true
-install.packages("tidycensus")
-```
+-   [mapboxapi](https://walker-data.com/mapboxapi/){.external target="_blank"}
 
-Then load the package into your R environment using the `library` function.
+-   [**tidycensus**](https://walker-data.com/tidycensus/){.external target="_blank"}
 
-```{r}
-#| warning: false
-#| echo: true
-library(tidycensus)
-```
+-   [tigris](https://github.com/walkerke/tigris){.external target="_blank"}
+
+    <hr/>
+
+-   [mapview](https://r-spatial.github.io/mapview/){.external target="_blank"}
+
+-   [sf](https://r-spatial.github.io/sf/){.external target="_blank"}
+
+-   [**tidyverse**](https://www.tidyverse.org/){.external target="_blank"}
+
+The first 4 are by Kyle Walker.
+
+## Analyzing US Census Data: Methods, Maps, and Models in R
+
+by Kyle Walker
+
+![](book_cover.png){height="250px"}
+
+Available free online: [https://walker-data.com/census-r/](https://walker-data.com/census-r/){.external target="_blank"}
+
+Hard copy available for pre-order from CRC Press.
 
 ## Census API key
 
 To use `tidycensus`, you will need a Census API key, which you can get for free from [http://api.census.gov/data/key_signup.html](http://api.census.gov/data/key_signup.html){.external target="_blank"}.
+
+<hr/>
 
 Run the following once to install your key in your `.Renviron` file so it will automatically be available for future sessions.
 
 ```{r}
 #| eval: false
 #| echo: true
+library(tidycensus)
 census_api_key("YOUR KEY GOES HERE", install = TRUE)
 ```
 
-The `census_api_key` function is from the `tidycensus` package, so make sure it is loaded first.
-
 ## How is US Census data organized?
 
-US Census data is organized into various datasets. Today we will use just two datasets, but many more are available.
+US Census data is organized by
+
+-   Datasets
+-   Variables
+-   Geographies
+
+. . .
+
+Today we will use just two datasets, but many more are available.
 
 -   2020 Decennial Census
 -   2016-2020 American Community Survey
@@ -63,14 +102,14 @@ US Census data is organized into various datasets. Today we will use just two da
 The 2020 Decennial Census is supposed to be an *enumeration* of the whole US population. It collects a limited number of variables on race, ethnicity, age, sex, and housing tenure.
 
 ::: callout-note
-The limited data currently available was released under P.L. 94-171 for political redistricting purposes.
+The limited data currently available was released under [P.L. 94-171](https://www.census.gov/programs-surveys/decennial-census/about/rdo/summary-files.html){.external target="_blank"} for political redistricting purposes.
 :::
 
 ## American Community Survey
 
-* ACS is sent to about 3.5 million households per year
-* Asks many more questions, including about income, education, language, and much more.
-* ACS data are *estimates*. The uncertainty in these estimates is expressed as *margins of error* for each variable.
+-   ACS is sent to about 3.5 million households per year
+-   Asks many more questions, including about income, education, language, and much more.
+-   ACS data are *estimates*. The uncertainty in these estimates is expressed as *margins of error* for each variable.
 
 ::: callout-note
 The ACS had a lower than usual response rate in 2020 due to the COVID-19 pandemic. As a result of the smaller sample size, the margins of error are larger for 2020 data.
@@ -89,26 +128,33 @@ Census datasets are broken down into
 
 ## Census variables
 
-* Different census datasets have different variables
-* 2020 Decennial Census currently has relatively view variables (~300)
-  - More variables will be released in the future
-* 2016-2020 ACS has around 28,000 variables
+-   Different census datasets have different variables
+
+::: incremental
+-   2020 Decennial Census currently has relatively few variables (\~300)
+    -   More variables will be released in the future
+    -   Example: **P1_001N** = Total population
+-   2016-2020 ACS has around 28,000 variables
+    -   Example: **B15002_016** = Number of males with a master's degree in the population age 25 and over
+:::
 
 ## Demo
 
-* Census website and manual workflow
-* Tidycensus code examples
+-   Manual workflow
+    -   [data.census.gov](https://data.census.gov){.external target="_blank"}
+    -   [TIGER/Line Shapefiles](https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html){.external target="_blank"}
+-   Tidycensus code examples
 
-## Resources
+## Other Resources
 
-Book
+::: {#resources style="font-size: smaller"}
+An independent project to make it easier for journalists to use ACS data:
 
-[Analyzing US Census Data: Methods, Maps, and Models in R](https://walker-data.com/census-r/){.external target="_blank"} by Kyle Walker.
-
-Videos
+-   [Census Reporter](https://censusreporter.org/){.external target="_blank"}
 
 Recent workshops at the University of Michigan:
 
 -   [Analyzing 2020 Census data with R and tidycensus - YouTube](https://www.youtube.com/watch?v=u2m90iPOPto){.external target="_blank"}
 -   [Making Maps of 2020 US Census Data in R - YouTube](https://www.youtube.com/watch?v=KMOTZij9qhU){.external target="_blank"}
 -   [Using the New 2016-20 American Community Survey Estimates in R - YouTube](https://www.youtube.com/watch?v=hJ8OycTvQXM){.external target="_blank"}
+:::
