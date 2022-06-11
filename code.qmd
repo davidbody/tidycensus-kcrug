@@ -1,0 +1,308 @@
+---
+title: "tidycensus code examples"
+author: "David W. Body"
+date: 2022-06-11
+format: html
+self-contained: true
+editor: source
+---
+
+## KCRUG
+
+These are the code examples I was unable to present today due to technical issues.
+
+## Setup
+
+```{r}
+library(tidycensus)
+library(tidyverse)
+options(tigris_use_cache = TRUE)
+```
+
+```{r}
+# census_api_key("YOUR KEY GOES HERE")
+```
+
+## 2020 Decennial Census
+
+What variables are available for the 2020 Decennial Census?
+
+Data released for political redistricting pursuant to P.L. 94-171 is dataset "pl".
+
+```{r}
+dc2020_vars <- load_variables(2020, "pl", cache = TRUE)
+dc2020_vars
+```
+
+Variables are grouped into tables.
+
+```{r}
+dc2020_vars |>
+  transmute(table = str_sub(name, 1, 2), concept) |>
+  count(table, concept)
+```
+
+Example: Total population of Nebraska counties.
+
+::: callout-note
+Notice the output about differential privacy.
+:::
+
+```{r}
+# total population for Nebraska counties
+ne_pop_2020 <- get_decennial(
+  geography = "county",
+  variables = "P2_001N",
+  year = 2020,
+  state = "Nebraska",
+)
+
+ne_pop_2020
+```
+
+`tidycensus` gives us data in regular dataframes (tibbles), so we can wrangle it as usual.
+
+Here are the counties with the five highest and five lowest populations in Nebraska.
+
+```{r}
+ne_pop_2020 |>
+  slice_max(value, n = 5)
+```
+
+```{r}
+ne_pop_2020 |>
+  slice_min(value, n = 5)
+```
+
+First attempt at visualizing the data.
+
+```{r}
+ne_pop_2020 |>
+  ggplot(aes(value, NAME)) +
+  geom_col()
+```
+
+Okay. That's pretty bad. Let's see if we can improve on that.
+
+```{r fig.height=10}
+ne_pop_2020 |>
+  mutate(NAME = str_remove(NAME, " County, Nebraska")) |>
+  ggplot(aes(value, reorder(NAME, value))) +
+  geom_col() +
+  scale_x_continuous(labels = scales::label_comma()) +
+  labs(title = "Population of Nebraska counties",
+       subtitle = "2020 Decennial US Census",
+       x = "Population",
+       y = "") +
+  theme_light()
+```
+
+### Retrieving multiple variables at once
+
+We can retrieve multiple variables at once by passing a character vector of variable names to `get_decennial`.
+
+```{r}
+variables <- c("P2_001N", "P2_005N", "P2_002N", "P2_006N", "P2_007N",
+               "P2_008N", "P2_009N", "P2_010N", "P2_011N")
+
+ne_race_ethnicity_2020 <- get_decennial(
+  geography = "county",
+  variables = variables,
+  year = 2020,
+  state = "NE", # <=
+  # output = "wide"
+)
+
+ne_race_ethnicity_2020
+```
+
+Note that by default, the output is in tidy format. We could get this into wide format using something like `pivot_wider`, but `tidycensus` gives us the option of requesting wide format.
+
+Note that I also changed "Nebraska" to "NE". `tidycensus` accepts either.
+
+```{r}
+ne_race_ethnicity_2020 <- get_decennial(
+  geography = "county",
+  variables = variables,
+  year = 2020,
+  state = "NE", # <=
+  output = "wide"
+)
+
+ne_race_ethnicity_2020
+```
+
+We can give the variables meaningful names by using a named vector like this. Notice that I am omitting total population (P2_001N) from the variable list and adding it back with the parameter `summary_var`.
+
+```{r}
+variables <- c(
+  # Total = "P2_001N",
+  White = "P2_005N",
+  Hispanic = "P2_002N",
+  Black = "P2_006N",
+  Native = "P2_007N",
+  Asian = "P2_008N",
+  HIPI = "P2_009N",
+  Other = "P2_010N",
+  TwoOrMore = "P2_011N")
+
+ne_race_ethnicity_2020 <- get_decennial(
+  geography = "county",
+  variables = variables,
+  year = 2020,
+  summary_var = "P2_001N", # <=
+  state = "NE",
+  # output = "wide"
+)
+
+ne_race_ethnicity_2020
+```
+
+We can wrangle the data as usual. For example here are totals for the state of Nebraska.
+
+```{r}
+ne_race_ethnicity_2020 |>
+  group_by(variable) |>
+  summarize(n = sum(value)) |>
+  arrange(desc(n))
+```
+
+Now we also have a separate column called `summary_value` that contains the total population for each county. That makes it convenient to calculate percentages. Here we compute the percentage of the population that is Hispanic or Latino for each county.
+
+```{r}
+ne_hispanic_percent <- ne_race_ethnicity_2020 |>
+  filter(variable == "Hispanic") |>
+  mutate(percent = 100 * (value / summary_value)) |>
+  select(NAME, percent)
+
+ne_hispanic_percent
+```
+
+```{r}
+# Lowest 5
+ne_hispanic_percent |>
+  slice_min(percent, n = 5)
+```
+
+```{r}
+# Highest 5
+ne_hispanic_percent |>
+  slice_max(percent, n = 5)
+```
+
+```{r}
+
+```
+
+### Choropleth maps
+
+The `tidycensus` package makes it easy to retrieve the geographic data necessary to draw maps. All we have to do is add `geometry = TRUE`.
+
+```{r}
+ne_race_ethnicity_2020 <- get_decennial(
+  geography = "county",
+  variables = variables,
+  year = 2020,
+  state = "NE",
+  summary_var = "P2_001N",
+  geometry = TRUE # <=
+)
+
+ne_race_ethnicity_2020
+```
+
+Notice that we now have a *simple feature collection* rather than an ordinary dataframe (tibble). The geographic data is in the `geometry` column. Geographic data is composed of polygons in the form of lists of longitude/latitude points. The `geometry` column is actually "multipolygons" to support geographic entities that are not contiguous. E.g. coastal counties that include islands.
+
+Next we recompute the percentage Hispanic or Latino.
+
+```{r}
+ne_hispanic_percent <- ne_race_ethnicity_2020 |>
+  filter(variable == "Hispanic") |>
+  mutate(percent = 100 * (value / summary_value)) |>
+  select(NAME, percent)
+
+ne_hispanic_percent
+```
+
+We can make our first choropleth using the `plot` function.
+
+```{r}
+plot(ne_hispanic_percent["percent"])
+```
+
+If we want to use `ggplot2`, we use `geom_sf`.
+
+```{r}
+ne_hispanic_percent |>
+  ggplot(aes(geometry = geometry, fill = percent)) +
+  geom_sf()
+```
+
+Let's clean that up by removing the axis labels, selecting a different color palette, and adding some labels.
+
+We'll also transform the data to a different coordinate reference system (CRS) The details of this are beyond the scope of today's demo, but notice the subtle change to the shape of the state.
+
+```{r}
+library(sf) # for st_transform function
+
+ne_hispanic_percent |>
+  st_transform(crs = 32104) |>
+  ggplot(aes(geometry = geometry, fill = percent)) +
+  geom_sf() +
+  scale_fill_viridis_c() +
+  theme_void() +
+  labs(title = "Nebraska Hispanic or Latino Population",
+       subtitle = "2020 Decennial US Census",
+       fill = "Percent of total\ncounty population")
+```
+
+## 2016-2020 American Community Survey (ACS)
+
+Working with the ACS is similar. We start by getting a list of available variables.
+
+```{r}
+acs5_2020_vars <- load_variables(2020, "acs5", cache = TRUE)
+acs5_2020_vars
+```
+
+Notice that there are a lot more variables and the output contains a column indicating the smallest geography for which data is available for each variable.
+
+Let's get median household income for each county in Massachusetts.
+
+```{r}
+ma_income_2020 <- get_acs(
+  geography = "county",
+  variables = "B19013_001",
+  year = 2020,
+  state = "MA",
+  # moe_level = 99,
+  # output = "wide"
+)
+
+ma_income_2020
+```
+
+Because the ACS is based on sampling, the variables represent estimates, and estimates have margins of error. Those are the columns named `estimate` and `moe`. By default, the margins of error are at the 90% level, but you can request 95% or 99% margin of error levels using the `moe_level` parameter.
+
+ACS data can also be retrieved in wide format. The `tidycensus` package will append an *E* to the names of estimate columns and an *M* for the margin of error columns.
+
+Finally, we'll do a plot where we represent the uncertainty using error bars.
+
+```{r}
+ma_income_2020 |>
+  mutate(NAME = str_remove(NAME, " County, Massachusetts")) |>
+  ggplot(aes(estimate, reorder(NAME, estimate))) +
+  geom_point(color = "red", size = 2.5) +
+  geom_errorbar(aes(xmin = estimate - moe, xmax = estimate + moe)) +
+  scale_x_continuous(labels = scales::label_dollar()) +
+  theme_light() +
+  labs(
+    title = "Median Household Income for Massachusetts Counties",
+    subtitle = "with 90% compatibility intervals",
+    x = "",
+    y = "",
+    caption = "Data source: 2016-2020 ACS & tidycensus R package"
+  )
+```
+
+> Exercise for the reader: Why do those two counties have such high margins of error?

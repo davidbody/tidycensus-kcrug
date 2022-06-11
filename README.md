@@ -3,3 +3,5 @@
 ### Kansas City R Users Group, June 11, 2022
 
 View the slides [here](https://davidbody.github.io/tidycensus-kcrug/slides.html)
+
+[Quarto](https://davidbody.github.io/tidycensus-kcrug/slides.html) document with code examples is [here](https://davidbody.github.io/tidycensus-kcrug/code.html)
