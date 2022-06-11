@@ -4,4 +4,4 @@
 
 View the slides [here](https://davidbody.github.io/tidycensus-kcrug/slides.html)
 
-[Quarto](https://davidbody.github.io/tidycensus-kcrug/slides.html) document with code examples is [here](https://davidbody.github.io/tidycensus-kcrug/code.html)
+[Quarto](https://quarto.org/) document with code examples is [here](https://davidbody.github.io/tidycensus-kcrug/code.html)
