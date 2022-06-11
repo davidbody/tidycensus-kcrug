@@ -7,6 +7,7 @@ options(tigris_use_cache = TRUE)
 # Variables ---------------------------------------------------------------
 
 # What variables are available for the 2020 Decennial Census?
+# Data released for political redistricting pursuant to P.L. 94-171 is dataset "pl"
 dc2020_vars <- load_variables(2020, "pl", cache = TRUE)
 dc2020_vars
 
